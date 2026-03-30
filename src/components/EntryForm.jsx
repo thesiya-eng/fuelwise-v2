@@ -1,97 +1,126 @@
-import React from 'react'
-import { format } from 'date-fns'
+import React, { useState } from "react"
+import { supabase } from "../lib/supabaseClient"
 
-const todayStr = () => {
-  try { return format(new Date(), 'yyyy-MM-dd') } catch { return '' }
-}
+export default function EntryForm({ onClose }) {
 
-export default function EntryForm({ onSubmit, submitting, initial }){
-  const [entryDate, setEntryDate] = React.useState(initial?.entry_date || todayStr())
-  const [odometer, setOdometer] = React.useState(initial?.odometer_km ?? '')
-  const [liters, setLiters] = React.useState(initial?.liters ?? '')
-  const [totalCost, setTotalCost] = React.useState(initial?.total_cost ?? '')
-  const [station, setStation] = React.useState(initial?.station ?? '')
-  const [notes, setNotes] = React.useState(initial?.notes ?? '')
+  const today = new Date().toISOString().slice(0, 10)
 
-  React.useEffect(()=>{
-    if (!initial) return
-    setEntryDate(initial.entry_date || todayStr())
-    setOdometer(initial.odometer_km ?? '')
-    setLiters(initial.liters ?? '')
-    setTotalCost(initial.total_cost ?? '')
-    setStation(initial.station ?? '')
-    setNotes(initial.notes ?? '')
-  }, [initial])
+  const [date, setDate] = useState(today)
+  const [cost, setCost] = useState("")
+  const [liters, setLiters] = useState("")
+  const [odometer, setOdometer] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const pricePerLiter = (() => {
-    const l = Number(liters)
-    const c = Number(totalCost)
-    if (Number.isFinite(l) && l > 0 && Number.isFinite(c)) return c / l
-    return null
-  })()
+  const saveEntry = async () => {
 
-  function submit(e){
-    e.preventDefault()
-    onSubmit({
-      entry_date: entryDate,
-      odometer_km: Number(odometer),
-      liters: Number(liters),
-      total_cost: Number(totalCost),
-      station: station?.trim() || null,
-      notes: notes?.trim() || null,
-    })
+    if (!cost || !liters || !odometer) {
+      alert("Please fill all fields")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+
+      const {
+        data: { user },
+        error: userError
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        alert("User not authenticated")
+        console.log("User error:", userError)
+        setLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase
+        .from("fuel_entries")
+        .insert([
+          {
+            user_id: user.id,
+            entry_date: date,
+            total_cost: parseFloat(cost),
+            liters: parseFloat(liters),
+            odometer_km: parseFloat(odometer)
+          }
+        ])
+        .select()
+
+      console.log("INSERT RESULT:", data)
+      console.log("INSERT ERROR:", error)
+
+      if (error) {
+        alert(error.message)
+        setLoading(false)
+        return
+      }
+
+      // 🔥 Live update
+      window.dispatchEvent(new Event("entryAdded"))
+
+      // Close modal
+      onClose()
+
+    } catch (err) {
+      console.error("Unexpected error:", err)
+      alert("Something went wrong")
+    }
+
+    setLoading(false)
   }
 
   return (
-    <form onSubmit={submit} className="card">
-      <div className="card-inner">
-        <div className="row space">
-          <div>
-            <h2>{initial ? 'Edit Entry' : 'Add Fuel Entry'}</h2>
-            <p className="small">Enter odometer, liters and total cost — we calculate the rest.</p>
-          </div>
-          <span className="badge">{pricePerLiter ? `~ R${pricePerLiter.toFixed(2)}/L` : 'Price/L auto'}</span>
-        </div>
+    <div className="modal-card">
 
-        <div style={{height:14}} />
+      <h3>Add Fuel Entry</h3>
 
-        <div className="grid cols-2">
-          <div>
-            <label>Date</label>
-            <input className="input" type="date" value={entryDate} onChange={e=>setEntryDate(e.target.value)} required />
-          </div>
-          <div>
-            <label>Odometer (km)</label>
-            <input className="input" type="number" step="0.1" min="0" value={odometer} onChange={e=>setOdometer(e.target.value)} required />
-          </div>
-          <div>
-            <label>Liters</label>
-            <input className="input" type="number" step="0.01" min="0.01" value={liters} onChange={e=>setLiters(e.target.value)} required />
-          </div>
-          <div>
-            <label>Total Cost (R)</label>
-            <input className="input" type="number" step="0.01" min="0" value={totalCost} onChange={e=>setTotalCost(e.target.value)} required />
-          </div>
-          <div>
-            <label>Station (optional)</label>
-            <input className="input" value={station} onChange={e=>setStation(e.target.value)} placeholder="Shell, BP, Engen…" />
-          </div>
-          <div>
-            <label>Notes (optional)</label>
-            <input className="input" value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Anything to remember…" />
-          </div>
-        </div>
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        style={{ width: "100%", marginTop: 10, padding: 10 }}
+      />
 
-        <div style={{height:14}} />
-        <div className="row space">
-          <div className="small">
-            {pricePerLiter ? `Estimated price per liter: R${pricePerLiter.toFixed(2)}` : 'Fill in liters + total cost to see price/L.'}
-          </div>
-          <button className="btn" disabled={submitting}>
-            {submitting ? 'Saving…' : (initial ? 'Save Changes' : 'Add Entry')}
-          </button>
-        </div>
-      </div>
-    </form>
+      <input
+        type="number"
+        placeholder="Total Cost (R)"
+        value={cost}
+        onChange={(e) => setCost(e.target.value)}
+        style={{ width: "100%", marginTop: 10, padding: 10 }}
+      />
+
+      <input
+        type="number"
+        placeholder="Liters"
+        value={liters}
+        onChange={(e) => setLiters(e.target.value)}
+        style={{ width: "100%", marginTop: 10, padding: 10 }}
+      />
+
+      <input
+        type="number"
+        placeholder="Odometer (km)"
+        value={odometer}
+        onChange={(e) => setOdometer(e.target.value)}
+        style={{ width: "100%", marginTop: 10, padding: 10 }}
+      />
+
+      <button
+        style={{ marginTop: 14, width: "100%", padding: 12 }}
+        onClick={saveEntry}
+        disabled={loading}
+      >
+        {loading ? "Saving..." : "Save Entry"}
+      </button>
+
+      <button
+        style={{ marginTop: 10, width: "100%", padding: 12 }}
+        onClick={onClose}
+      >
+        Cancel
+      </button>
+
+    </div>
   )
 }

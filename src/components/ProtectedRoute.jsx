@@ -1,32 +1,25 @@
-import React from 'react'
-import { Navigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import React from "react"
+import { Navigate } from "react-router-dom"
+import { supabase } from "../lib/supabaseClient"
 
-export default function ProtectedRoute({ children }){
+export default function ProtectedRoute({ children }) {
+
+  const [user, setUser] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
-  const [session, setSession] = React.useState(null)
 
-  React.useEffect(()=>{
-    let mounted = true
-
-    supabase.auth.getSession().then(({ data })=>{
-      if (!mounted) return
-      setSession(data.session || null)
-      setLoading(false)
-    })
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess)=>{
-      setSession(sess || null)
-      setLoading(false)
-    })
-
-    return ()=>{
-      mounted = false
-      sub?.subscription?.unsubscribe?.()
-    }
+  React.useEffect(() => {
+    checkUser()
   }, [])
 
-  if (loading) return <div className="container"><div className="card"><div className="card-inner"><p>Loading…</p></div></div></div>
-  if (!session) return <Navigate to="/auth" replace />
+  async function checkUser() {
+    const { data } = await supabase.auth.getUser()
+    setUser(data?.user || null)
+    setLoading(false)
+  }
+
+  if (loading) return null
+
+  if (!user) return <Navigate to="/" />
+
   return children
 }

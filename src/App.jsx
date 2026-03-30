@@ -1,28 +1,41 @@
-import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { envReady } from './lib/supabaseClient'
-import Shell from './components/Shell.jsx'
-import AuthPage from './pages/AuthPage.jsx'
-import DashboardPage from './pages/DashboardPage.jsx'
-import SettingsPage from './pages/SettingsPage.jsx'
-import ProtectedRoute from './components/ProtectedRoute.jsx'
-import EnvMissing from './pages/EnvMissing.jsx'
+import React, { useEffect, useState } from "react"
+import { supabase } from "./lib/supabaseClient"
 
-export default function App(){
-  if (!envReady) return <EnvMissing />
+import Shell from "./components/Shell.jsx"
+import Dashboard from "./pages/DashboardPage.jsx"
+import AuthPage from "./pages/AuthPage.jsx"
 
+export default function App() {
+
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setLoading(false)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session)
+      }
+    )
+
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  if (loading) return null
+
+  // 🔐 NOT LOGGED IN → SHOW AUTH
+  if (!session) {
+    return <AuthPage />
+  }
+
+  // ✅ LOGGED IN → SHOW APP
   return (
-    <Routes>
-      <Route path="/auth" element={<AuthPage />} />
-      <Route path="/" element={
-        <ProtectedRoute>
-          <Shell />
-        </ProtectedRoute>
-      }>
-        <Route index element={<DashboardPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <Shell>
+      <Dashboard />
+    </Shell>
   )
 }

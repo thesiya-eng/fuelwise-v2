@@ -1,226 +1,206 @@
-import React from 'react'
-import { Outlet, Link, useLocation } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
-import { initialsFromEmail } from '../lib/format'
+import React from "react"
+import { supabase } from "../lib/supabaseClient"
+import logo from "../assets/logo.png"
 
-export default function Shell() {
-  const [email, setEmail] = React.useState('')
-  const [open, setOpen] = React.useState(false)
-  const [logoOpen, setLogoOpen] = React.useState(false)
+import EntryForm from "../components/EntryForm"
+import DailyOdometerForm from "../components/DailyOdometerForm"
 
-  const loc = useLocation()
+export default function Shell({ children }) {
+
+  const [user, setUser] = React.useState(null)
+  const [showEntry, setShowEntry] = React.useState(false)
+  const [showOdometer, setShowOdometer] = React.useState(false)
+  const [showLogoPopup, setShowLogoPopup] = React.useState(false)
 
   React.useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setEmail(data?.user?.email || '')
-    })
+    loadUser()
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => {
-      setEmail(sess?.user?.email || '')
-    })
+    function handleOpenEntry() {
+      setShowEntry(true)
+    }
 
-    return () => sub?.subscription?.unsubscribe?.()
+    function handleOpenOdometer() {
+      setShowOdometer(true)
+    }
+
+    window.addEventListener("openEntry", handleOpenEntry)
+    window.addEventListener("openOdometer", handleOpenOdometer)
+
+    return () => {
+      window.removeEventListener("openEntry", handleOpenEntry)
+      window.removeEventListener("openOdometer", handleOpenOdometer)
+    }
   }, [])
 
-  // Close logo preview with ESC
-  React.useEffect(() => {
-    function onKeyDown(e) {
-      if (e.key === 'Escape') setLogoOpen(false)
-    }
-    if (logoOpen) window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [logoOpen])
-
-  async function signOut() {
-    await supabase.auth.signOut()
+  async function loadUser() {
+    const { data } = await supabase.auth.getUser()
+    setUser(data?.user || null)
   }
 
-  const initials = initialsFromEmail(email)
+  async function logout() {
+    await supabase.auth.signOut()
+    window.location.reload()
+  }
+
+  const initials =
+    user?.email
+      ? user.email
+          .split("@")[0]
+          .split(".")
+          .map(x => x[0])
+          .join("")
+          .toUpperCase()
+      : "U"
+
+  const glassBtn = {
+    padding: "10px 16px",
+    borderRadius: 18,
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    color: "white",
+    backdropFilter: "blur(8px)",
+    cursor: "pointer"
+  }
 
   return (
-    <div className="container">
-      {/* Top header */}
-      <div className="card">
-        <div className="card-inner">
-          <div className="row space">
-            <div className="row" style={{ gap: 12 }}>
-              {/* Logo + initials (Option B) */}
-              <div className="row" style={{ gap: 10 }}>
-                <button
-                  type="button"
-                  onClick={() => setLogoOpen(true)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    lineHeight: 0,
-                  }}
-                  aria-label="Open logo preview"
-                  title="Open logo preview"
-                >
-                  <img
-                    src="/src/assets/logo.png"
-                    alt="Fuel Wise"
-                    style={{
-                      height: 34,
-                      width: 34,
-                      borderRadius: 999,
-                      objectFit: 'cover',
-                      border: '1px solid rgba(110,168,254,0.38)',
-                      boxShadow: '0 10px 25px rgba(0,0,0,0.25)',
-                    }}
-                  />
-                </button>
 
-                <div className="avatar" aria-hidden>
-                  {initials}
-                </div>
+    <div className="min-h-screen">
+
+      {/* HEADER */}
+      <div className="container">
+
+        <div
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "20px",
+            padding: "18px 24px",
+            backdropFilter: "blur(10px)"
+          }}
+        >
+
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+
+            {/* LEFT */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+
+              <div
+                onClick={() => setShowLogoPopup(true)}
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  border: "2px solid rgba(255,255,255,0.2)"
+                }}
+              >
+                <img
+                  src={logo}
+                  alt="logo"
+                  style={{ width: "100%", height: "100%" }}
+                />
               </div>
 
               <div>
-                <div className="kicker">Fuel Wise v2</div>
-                <h1>Dashboard</h1>
-                <p className="small">Signed in as {email || '—'}</p>
-              </div>
-            </div>
-
-            <div className="row" style={{ gap: 10 }}>
-              <Link
-                className="btn secondary"
-                to="/"
-                aria-current={loc.pathname === '/' ? 'page' : undefined}
-              >
-                Home
-              </Link>
-
-              <Link
-                className="btn secondary"
-                to="/settings"
-                aria-current={loc.pathname === '/settings' ? 'page' : undefined}
-              >
-                Settings
-              </Link>
-
-              <div style={{ position: 'relative' }}>
-                <button
-                  className="btn"
-                  onClick={() => setOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={open}
-                >
-                  Profile ▾
-                </button>
-
-                {open && (
-                  <div
-                    className="card"
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: 'calc(100% + 10px)',
-                      minWidth: 220,
-                      zIndex: 5,
-                    }}
-                  >
-                    <div className="card-inner">
-                      <div className="row" style={{ justifyContent: 'space-between' }}>
-                        <span className="badge">Account</span>
-                        <span className="small">{email}</span>
-                      </div>
-
-                      <div className="hr" />
-
-                      <button className="btn danger" onClick={signOut} style={{ width: '100%' }}>
-                        Log out
-                      </button>
-
-                      <div className="toast" style={{ marginTop: 12 }}>
-                        Multi-user is handled by accounts. Sign in/out to switch users.
-                      </div>
-                    </div>
-                  </div>
+                <h2 style={{ margin: 0 }}>FuelWise</h2>
+                <p style={{ margin: 0, opacity: 0.7 }}>Smart Fuel Tracking</p>
+                {user && (
+                  <p style={{ margin: 0, fontSize: 12 }}>{user.email}</p>
                 )}
               </div>
+
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Logo Preview Overlay */}
-      {logoOpen && (
-        <div
-          onClick={() => setLogoOpen(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: 24,
-          }}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="card"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 520, width: '100%' }}
-          >
-            <div className="card-inner" style={{ textAlign: 'center' }}>
-              <div className="row space">
-                <div style={{ textAlign: 'left' }}>
-                  <div className="kicker">Fuel Wise</div>
-                  <h2>Logo preview</h2>
-                  <p className="small">Click outside or press Esc to close.</p>
-                </div>
+            {/* RIGHT */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
 
-                <button className="btn danger" type="button" onClick={() => setLogoOpen(false)}>
-                  Close
+              {/* ❌ REMOVED + ODOMETER BUTTON */}
+
+              {["Home", "Settings", "Profile"].map((item) => (
+                <button key={item} style={glassBtn}>
+                  {item}
                 </button>
-              </div>
+              ))}
 
-              <div style={{ height: 14 }} />
-
-              <img
-                src="/src/assets/logo.png"
-                alt="Fuel Wise Logo"
-                style={{
-                  width: '100%',
-                  maxHeight: 420,
-                  objectFit: 'contain',
-                  borderRadius: 16,
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  background: 'rgba(0,0,0,0.12)',
-                }}
-              />
-
-              {/* Developer credit */}
               <div
                 style={{
-                  marginTop: 18,
-                  paddingTop: 14,
-                  borderTop: '1px solid rgba(255,255,255,0.08)',
-                  textAlign: 'center',
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "#6c5ce7",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "bold"
                 }}
               >
-                <div style={{ fontSize: 13, opacity: 0.85 }}>Developed by SB. Duma</div>
-                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 4 }}>
-                  Made in South Africa 🇿🇦
-                </div>
+                {initials}
               </div>
+
+              <button
+                onClick={logout}
+                style={{
+                  padding: "8px 14px",
+                  borderRadius: 16,
+                  background: "#ef4444",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer"
+                }}
+              >
+                Logout
+              </button>
+
             </div>
+
           </div>
+
+        </div>
+
+      </div>
+
+      <div style={{ height: 24 }} />
+
+      {children}
+
+      {/* ENTRY MODAL */}
+      {showEntry && (
+        <div className="modal-backdrop">
+          <EntryForm onClose={() => setShowEntry(false)} />
         </div>
       )}
 
-      <div style={{ height: 14 }} />
-      <Outlet />
-      <div style={{ height: 22 }} />
+      {/* ODOMETER MODAL (still works via floating menu now) */}
+      {showOdometer && (
+        <div className="modal-backdrop">
+          <DailyOdometerForm onClose={() => setShowOdometer(false)} />
+        </div>
+      )}
 
-      <p className="small">Tip: add at least 3–5 entries to see trends clearly.</p>
+      {/* LOGO POPUP */}
+      {showLogoPopup && (
+        <div className="modal-backdrop">
+
+          <div className="modal-card">
+            <h3>FuelWise</h3>
+            <p>Smart fuel tracking system 🚗</p>
+
+            <button
+              onClick={() => setShowLogoPopup(false)}
+              style={{ marginTop: 10, width: "100%", padding: 10 }}
+            >
+              Close
+            </button>
+          </div>
+
+        </div>
+      )}
+
     </div>
   )
 }
