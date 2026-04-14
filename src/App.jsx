@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react"
-import React, { useEffect, useState } from "react"
 import { supabase } from "./lib/supabaseClient"
 import { Routes, Route } from "react-router-dom"
 
