@@ -17,7 +17,7 @@ async function loadSession() {
 try {
 const { data, error } = await supabase.auth.getSession()
 
-```
+
     if (error) {
       console.error(error)
     }
@@ -41,7 +41,7 @@ const { data: listener } = supabase.auth.onAuthStateChange(
 return () => {
   listener.subscription.unsubscribe()
 }
-```
+
 
 }, [])
 
