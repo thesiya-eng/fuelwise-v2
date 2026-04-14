@@ -3,6 +3,15 @@ import { formatZAR } from "../utils/format"
 
 export default function StatCards({ entries }) {
 
+  // 🟡 EMPTY STATE FIX
+  if (!entries || entries.length === 0) {
+    return (
+      <div style={{ marginTop: "24px", opacity: 0.6 }}>
+        No stats available yet.
+      </div>
+    )
+  }
+
   const now = new Date()
   const currentMonth = now.toISOString().slice(0, 7)
 
@@ -19,7 +28,7 @@ export default function StatCards({ entries }) {
   const entryCount = currentEntries.length
   const avgPrice = totalLiters > 0 ? totalSpend / totalLiters : 0
 
-  // 🔥 FIXED COST PER KM
+  // 🔥 COST PER KM
   let costPerKm = 0
 
   if (currentEntries.length > 1) {

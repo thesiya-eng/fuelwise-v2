@@ -29,26 +29,31 @@ export default function EntryForm({ onClose }) {
 
       if (userError || !user) {
         alert("User not authenticated")
-        console.log("User error:", userError)
         setLoading(false)
         return
       }
 
+      // 🔥 GET MODE + VEHICLE
+      const mode = localStorage.getItem("appMode")
+      const vehicleId = localStorage.getItem("fleetVehicleId")
+
+      const insertData = {
+        user_id: user.id,
+        entry_date: date,
+        total_cost: parseFloat(cost),
+        liters: parseFloat(liters),
+        odometer_km: parseFloat(odometer)
+      }
+
+      // 🔥 IF FLEET MODE → ADD VEHICLE
+      if (mode === "fleet" && vehicleId) {
+        insertData.vehicle_id = vehicleId
+      }
+
       const { data, error } = await supabase
         .from("fuel_entries")
-        .insert([
-          {
-            user_id: user.id,
-            entry_date: date,
-            total_cost: parseFloat(cost),
-            liters: parseFloat(liters),
-            odometer_km: parseFloat(odometer)
-          }
-        ])
+        .insert([insertData])
         .select()
-
-      console.log("INSERT RESULT:", data)
-      console.log("INSERT ERROR:", error)
 
       if (error) {
         alert(error.message)
@@ -56,14 +61,11 @@ export default function EntryForm({ onClose }) {
         return
       }
 
-      // 🔥 Live update
       window.dispatchEvent(new Event("entryAdded"))
-
-      // Close modal
       onClose()
 
     } catch (err) {
-      console.error("Unexpected error:", err)
+      console.error(err)
       alert("Something went wrong")
     }
 

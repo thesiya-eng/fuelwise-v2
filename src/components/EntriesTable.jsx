@@ -64,79 +64,92 @@ export default function EntriesTable({ entries }) {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
-          {entries.map((entry) => (
+          {entries.map((entry, index) => {
+            const prev = entries[index + 1] // sorted DESC
 
-            <div
-              key={entry.id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "12px 14px",
-                borderRadius: "12px",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)"
-              }}
-            >
+            let distance = null
 
-              {/* LEFT SIDE */}
-              <div style={{ display: "flex", gap: 16 }}>
+            if (prev) {
+              distance = entry.odometer_km - prev.odometer_km
+            }
 
-                <div>
-                  <div style={{ fontWeight: 600 }}>
-                    {formatZAR(entry.total_cost)}
+            return (
+              <div
+                key={entry.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "12px 14px",
+                  borderRadius: "12px",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)"
+                }}
+              >
+
+                {/* LEFT SIDE */}
+                <div style={{ display: "flex", gap: 16 }}>
+
+                  <div>
+                    <div style={{ fontWeight: 600 }}>
+                      {formatZAR(entry.total_cost)}
+                    </div>
+                    <div style={{ fontSize: 12, opacity: 0.6 }}>
+                      {entry.entry_date}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, opacity: 0.6 }}>
-                    {entry.entry_date}
+
+                  <div style={{ fontSize: 13 }}>
+                    {entry.liters} L
                   </div>
+
+                  <div style={{ fontSize: 13 }}>
+                    {entry.odometer_km} km
+                    {distance !== null && (
+                      <span style={{ marginLeft: 8, opacity: 0.6 }}>
+                        (+{distance} km)
+                      </span>
+                    )}
+                  </div>
+
                 </div>
 
-                <div style={{ fontSize: 13 }}>
-                  {entry.liters} L
-                </div>
+                {/* RIGHT SIDE ACTIONS */}
+                <div style={{ display: "flex", gap: 10 }}>
 
-                <div style={{ fontSize: 13 }}>
-                  {entry.odometer_km} km
+                  <button
+                    onClick={() => handleEdit(entry)}
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: "8px",
+                      border: "none",
+                      cursor: "pointer",
+                      background: "rgba(255,255,255,0.1)",
+                      color: "white"
+                    }}
+                  >
+                    ✏️
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(entry.id)}
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: "8px",
+                      border: "none",
+                      background: "#ef4444",
+                      color: "white",
+                      cursor: "pointer"
+                    }}
+                  >
+                    🗑️
+                  </button>
+
                 </div>
 
               </div>
-
-              {/* RIGHT SIDE ACTIONS */}
-              <div style={{ display: "flex", gap: 10 }}>
-
-                <button
-                  onClick={() => handleEdit(entry)}
-                  style={{
-                    padding: "6px 10px",
-                    borderRadius: "8px",
-                    border: "none",
-                    cursor: "pointer",
-                    background: "rgba(255,255,255,0.1)",
-                    color: "white"
-                  }}
-                >
-                  ✏️
-                </button>
-
-                <button
-                  onClick={() => handleDelete(entry.id)}
-                  style={{
-                    padding: "6px 10px",
-                    borderRadius: "8px",
-                    border: "none",
-                    background: "#ef4444",
-                    color: "white",
-                    cursor: "pointer"
-                  }}
-                >
-                  🗑️
-                </button>
-
-              </div>
-
-            </div>
-
-          ))}
+            )
+          })}
 
         </div>
 
