@@ -39,7 +39,9 @@ const { data: listener } = supabase.auth.onAuthStateChange(
   }
 )
 
-return () => listener.subscription.unsubscribe()
+return () => {
+  listener.subscription.unsubscribe()
+}
 ```
 
 }, [])
