@@ -14,12 +14,25 @@ const [session, setSession] = useState(null)
 const [loading, setLoading] = useState(true)
 
 useEffect(() => {
-supabase.auth.getSession().then(({ data }) => {
-setSession(data.session)
-setLoading(false)
-})
+async function loadSession() {
+try {
+const { data, error } = await supabase.auth.getSession()
 
 ```
+    if (error) {
+      console.error(error)
+    }
+
+    setSession(data?.session || null)
+  } catch (err) {
+    console.error("Session error:", err)
+  } finally {
+    setLoading(false)
+  }
+}
+
+loadSession()
+
 const { data: listener } = supabase.auth.onAuthStateChange(
   (_event, session) => {
     setSession(session)
@@ -31,7 +44,7 @@ return () => listener.subscription.unsubscribe()
 
 }, [])
 
-// 🔥 SHOW SOMETHING WHILE LOADING
+// 🔥 LOADING STATE
 if (loading) {
 return (
 <div style={{ padding: "40px", color: "white" }}> <h2>Loading FuelWise...</h2> </div>
