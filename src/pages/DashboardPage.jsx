@@ -19,7 +19,7 @@ localStorage.getItem("appMode") || "fuel"
 
 const vehicleName = localStorage.getItem("fleetVehicleName")
 
-async function loadEntries() {
+async function loadEntries(currentMode) {
 setLoading(true)
 
 ```
@@ -27,7 +27,6 @@ const {
   data: { user }
 } = await supabase.auth.getUser()
 
-const currentMode = localStorage.getItem("appMode") || "fuel"
 const vehicleId = localStorage.getItem("fleetVehicleId")
 
 let query = supabase
@@ -35,7 +34,7 @@ let query = supabase
   .select("*")
   .order("entry_date", { ascending: false })
 
-// 🔥 filter by mode FIRST
+// 🔥 ALWAYS filter by mode
 query = query.eq("mode", currentMode)
 
 if (currentMode === "fuel") {
@@ -66,23 +65,23 @@ setLoading(false)
 
 }
 
+// 🔥 RUN EVERY TIME MODE CHANGES
 useEffect(() => {
+loadEntries(mode)
+}, [mode])
 
-```
-const refresh = () => {
-  const newMode = localStorage.getItem("appMode") || "fuel"
-  setMode(newMode)
-  loadEntries()
+// 🔥 LISTEN FOR MODE SWITCH EVENT
+useEffect(() => {
+const handleModeChange = () => {
+const newMode = localStorage.getItem("appMode") || "fuel"
+setMode(newMode)
 }
 
-loadEntries()
-
-window.addEventListener("entryAdded", refresh)
-window.addEventListener("modeChanged", refresh)
+```
+window.addEventListener("modeChanged", handleModeChange)
 
 return () => {
-  window.removeEventListener("entryAdded", refresh)
-  window.removeEventListener("modeChanged", refresh)
+  window.removeEventListener("modeChanged", handleModeChange)
 }
 ```
 
