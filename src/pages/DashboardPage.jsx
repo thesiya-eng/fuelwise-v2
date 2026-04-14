@@ -34,7 +34,7 @@ let query = supabase
   .select("*")
   .order("entry_date", { ascending: false })
 
-// 🔥 CRITICAL: always filter by mode
+// 🔥 FILTER BY MODE
 query = query.eq("mode", mode)
 
 if (mode === "fuel") {
@@ -70,9 +70,15 @@ loadEntries()
 
 ```
 const refresh = () => loadEntries()
-window.addEventListener("entryAdded", refresh)
 
-return () => window.removeEventListener("entryAdded", refresh)
+// 🔥 LISTEN FOR EVENTS
+window.addEventListener("entryAdded", refresh)
+window.addEventListener("modeChanged", refresh)
+
+return () => {
+  window.removeEventListener("entryAdded", refresh)
+  window.removeEventListener("modeChanged", refresh)
+}
 ```
 
 }, [])
