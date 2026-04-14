@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 export default function Shell({ children }) {
@@ -9,30 +9,12 @@ const [mode, setMode] = useState(
 localStorage.getItem("appMode") || "fuel"
 )
 
-useEffect(() => {
-const handleModeChange = () => {
-setMode(localStorage.getItem("appMode") || "fuel")
-}
-
-```
-window.addEventListener("modeChanged", handleModeChange)
-
-return () => {
-  window.removeEventListener("modeChanged", handleModeChange)
-}
-```
-
-}, [])
-
 const switchMode = () => {
 const newMode = mode === "fuel" ? "fleet" : "fuel"
 
 ```
 localStorage.setItem("appMode", newMode)
 setMode(newMode)
-
-// 🔥 notify whole app
-window.dispatchEvent(new Event("modeChanged"))
 ```
 
 }
@@ -68,7 +50,10 @@ return ( <div>
     </div>
   </div>
 
-  {children}
+  {/* 🔥 THIS IS THE FIX */}
+  <div key={mode}>
+    {children}
+  </div>
 
 </div>
 ```
