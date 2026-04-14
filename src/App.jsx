@@ -9,7 +9,6 @@ import Settings from "./pages/Settings.jsx"
 import AuthPage from "./pages/AuthPage.jsx"
 
 export default function App() {
-
 const [session, setSession] = useState(null)
 const [loading, setLoading] = useState(true)
 
@@ -46,19 +45,16 @@ return () => {
 
 }, [])
 
-// 🔥 LOADING STATE
 if (loading) {
 return (
 <div style={{ padding: "40px", color: "white" }}> <h2>Loading FuelWise...</h2> </div>
 )
 }
 
-// 🔐 NOT LOGGED IN
 if (!session) {
 return <AuthPage />
 }
 
-// ✅ LOGGED IN
 return ( <Shell> <Routes>
 <Route path="/" element={<Dashboard />} />
 <Route path="/profile" element={<Profile />} />
