@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react"
 import { supabase } from "../lib/supabaseClient"
-import { useUser } from "../context/UserContext"
 
 import StatCards from "../components/StatCards"
 import PredictionCard from "../components/PredictionCard"
@@ -11,10 +10,12 @@ import FloatingAddButton from "../components/FloatingAddButton"
 
 export default function Dashboard() {
 
-const { accountType } = useUser()
-
 const [entries, setEntries] = useState([])
 const [loading, setLoading] = useState(true)
+
+const [mode, setMode] = useState(
+localStorage.getItem("appMode") || "fuel"
+)
 
 const vehicleName = localStorage.getItem("fleetVehicleName")
 
@@ -26,7 +27,7 @@ const {
   data: { user }
 } = await supabase.auth.getUser()
 
-const mode = localStorage.getItem("appMode") || "fuel"
+const currentMode = localStorage.getItem("appMode") || "fuel"
 const vehicleId = localStorage.getItem("fleetVehicleId")
 
 let query = supabase
@@ -34,14 +35,14 @@ let query = supabase
   .select("*")
   .order("entry_date", { ascending: false })
 
-// 🔥 FILTER BY MODE
-query = query.eq("mode", mode)
+// 🔥 filter by mode FIRST
+query = query.eq("mode", currentMode)
 
-if (mode === "fuel") {
+if (currentMode === "fuel") {
   query = query.eq("user_id", user.id)
 }
 
-if (mode === "fleet") {
+if (currentMode === "fleet") {
   if (vehicleId) {
     query = query.eq("vehicle_id", vehicleId)
   } else {
@@ -66,12 +67,16 @@ setLoading(false)
 }
 
 useEffect(() => {
-loadEntries()
 
 ```
-const refresh = () => loadEntries()
+const refresh = () => {
+  const newMode = localStorage.getItem("appMode") || "fuel"
+  setMode(newMode)
+  loadEntries()
+}
 
-// 🔥 LISTEN FOR EVENTS
+loadEntries()
+
 window.addEventListener("entryAdded", refresh)
 window.addEventListener("modeChanged", refresh)
 
@@ -88,12 +93,12 @@ return (
 
 ```
   <h1 style={{ marginBottom: "10px" }}>
-    {accountType === "fleet"
+    {mode === "fleet"
       ? `🚀 ${vehicleName || "Fleet Dashboard"}`
       : "FuelWise Dashboard"}
   </h1>
 
-  {accountType === "fleet" && (
+  {mode === "fleet" && (
     <button
       style={{
         marginBottom: 20,

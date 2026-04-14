@@ -1,19 +1,37 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
 export default function Shell({ children }) {
 
 const navigate = useNavigate()
 
-const mode = localStorage.getItem("appMode") || "fuel"
+const [mode, setMode] = useState(
+localStorage.getItem("appMode") || "fuel"
+)
+
+useEffect(() => {
+const handleModeChange = () => {
+setMode(localStorage.getItem("appMode") || "fuel")
+}
+
+```
+window.addEventListener("modeChanged", handleModeChange)
+
+return () => {
+  window.removeEventListener("modeChanged", handleModeChange)
+}
+```
+
+}, [])
 
 const switchMode = () => {
 const newMode = mode === "fuel" ? "fleet" : "fuel"
 
 ```
 localStorage.setItem("appMode", newMode)
+setMode(newMode)
 
-// 🔥 FORCE REACT TO UPDATE
+// 🔥 notify whole app
 window.dispatchEvent(new Event("modeChanged"))
 ```
 
