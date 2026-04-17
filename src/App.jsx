@@ -9,55 +9,59 @@ import Settings from "./pages/Settings.jsx"
 import AuthPage from "./pages/AuthPage.jsx"
 
 export default function App() {
-const [session, setSession] = useState(null)
-const [loading, setLoading] = useState(true)
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-useEffect(() => {
-async function loadSession() {
-try {
-const { data, error } = await supabase.auth.getSession()
+  useEffect(() => {
+    async function loadSession() {
+      try {
+        const { data, error } = await supabase.auth.getSession()
 
+        if (error) {
+          console.error(error)
+        }
 
-    if (error) {
-      console.error(error)
+        setSession(data?.session || null)
+      } catch (err) {
+        console.error("Session error:", err)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    setSession(data?.session || null)
-  } catch (err) {
-    console.error("Session error:", err)
-  } finally {
-    setLoading(false)
+    loadSession()
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session)
+      }
+    )
+
+    return () => {
+      listener?.subscription?.unsubscribe?.()
+    }
+
+  }, [])
+
+  if (loading) {
+    return (
+      <div style={{ padding: "40px", color: "white" }}>
+        <h2>Loading FuelWise...</h2>
+      </div>
+    )
   }
-}
 
-loadSession()
-
-const { data: listener } = supabase.auth.onAuthStateChange(
-  (_event, session) => {
-    setSession(session)
+  if (!session) {
+    return <AuthPage />
   }
-)
 
-return () => {
-  listener?.subscription?.unsubscribe?.()
-}
-
-
-}, [])
-
-if (loading) {
-return (
-<div style={{ padding: "40px", color: "white" }}> <h2>Loading FuelWise...</h2> </div>
-)
-}
-
-if (!session) {
-return <AuthPage />
-}
-
-return ( <Shell> <Routes>
-<Route path="/" element={<Dashboard />} />
-<Route path="/profile" element={<Profile />} />
-<Route path="/settings" element={<Settings />} /> </Routes> </Shell>
-)
+  return (
+    <Shell>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+      </Routes>
+    </Shell>
+  )
 }
