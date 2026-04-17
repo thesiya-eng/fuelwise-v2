@@ -93,7 +93,7 @@ return (
 ```
   <h1 style={{ marginBottom: "10px" }}>
     {mode === "fleet"
-      ? `🚀 ${vehicleName || "Fleet Dashboard"}`
+      ? `${vehicleName || "Fleet Dashboard"}`
       : "FuelWise Dashboard"}
   </h1>
 
@@ -120,7 +120,7 @@ return (
 
   {!loading && entries.length === 0 && (
     <p style={{ opacity: 0.6, marginBottom: "20px" }}>
-      No fuel entries yet — your dashboard will update as you add data 👇
+      No fuel entries yet - your dashboard will update as you add data 👇
     </p>
   )}
 
