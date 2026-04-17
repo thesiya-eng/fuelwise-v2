@@ -62,10 +62,21 @@ export default function EntriesTable({ entries }) {
         <p style={{ opacity: 0.7 }}>No fuel entries yet.</p>
       ) : (
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+
+            // 🔥 THIS IS THE KEY PART
+            maxHeight: "900px", // ~15 entries
+            overflowY: "auto",
+            paddingRight: "6px"
+          }}
+        >
 
           {entries.map((entry, index) => {
-            const prev = entries[index + 1] // sorted DESC
+            const prev = entries[index + 1]
 
             let distance = null
 
@@ -87,7 +98,6 @@ export default function EntriesTable({ entries }) {
                 }}
               >
 
-                {/* LEFT SIDE */}
                 <div style={{ display: "flex", gap: 16 }}>
 
                   <div>
@@ -114,7 +124,6 @@ export default function EntriesTable({ entries }) {
 
                 </div>
 
-                {/* RIGHT SIDE ACTIONS */}
                 <div style={{ display: "flex", gap: 10 }}>
 
                   <button
