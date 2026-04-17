@@ -10,130 +10,121 @@ import FloatingAddButton from "../components/FloatingAddButton"
 
 export default function Dashboard() {
 
-const [entries, setEntries] = useState([])
-const [loading, setLoading] = useState(true)
+  const [entries, setEntries] = useState([])
+  const [loading, setLoading] = useState(true)
 
-const [mode, setMode] = useState(
-localStorage.getItem("appMode") || "fuel"
-)
+  const [mode, setMode] = useState(
+    localStorage.getItem("appMode") || "fuel"
+  )
 
-const vehicleName = localStorage.getItem("fleetVehicleName")
+  const vehicleName = localStorage.getItem("fleetVehicleName")
 
-async function loadEntries(currentMode) {
-setLoading(true)
+  async function loadEntries(currentMode) {
+    setLoading(true)
 
-```
-const {
-  data: { user }
-} = await supabase.auth.getUser()
+    const {
+      data: { user }
+    } = await supabase.auth.getUser()
 
-const vehicleId = localStorage.getItem("fleetVehicleId")
+    const vehicleId = localStorage.getItem("fleetVehicleId")
 
-let query = supabase
-  .from("fuel_entries")
-  .select("*")
-  .order("entry_date", { ascending: false })
+    let query = supabase
+      .from("fuel_entries")
+      .select("*")
+      .order("entry_date", { ascending: false })
 
-// 🔥 ALWAYS filter by mode
-query = query.eq("mode", currentMode)
+    // filter by mode
+    query = query.eq("mode", currentMode)
 
-if (currentMode === "fuel") {
-  query = query.eq("user_id", user.id)
-}
+    if (currentMode === "fuel") {
+      query = query.eq("user_id", user.id)
+    }
 
-if (currentMode === "fleet") {
-  if (vehicleId) {
-    query = query.eq("vehicle_id", vehicleId)
-  } else {
-    setEntries([])
+    if (currentMode === "fleet") {
+      if (vehicleId) {
+        query = query.eq("vehicle_id", vehicleId)
+      } else {
+        setEntries([])
+        setLoading(false)
+        return
+      }
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error(error)
+      setEntries([])
+    } else {
+      setEntries(data || [])
+    }
+
     setLoading(false)
-    return
   }
-}
 
-const { data, error } = await query
+  // reload when mode changes
+  useEffect(() => {
+    loadEntries(mode)
+  }, [mode])
 
-if (error) {
-  console.error(error)
-  setEntries([])
-} else {
-  setEntries(data || [])
-}
+  // listen for mode switch
+  useEffect(() => {
+    const handleModeChange = () => {
+      const newMode = localStorage.getItem("appMode") || "fuel"
+      setMode(newMode)
+    }
 
-setLoading(false)
-```
+    window.addEventListener("modeChanged", handleModeChange)
 
-}
+    return () => {
+      window.removeEventListener("modeChanged", handleModeChange)
+    }
+  }, [])
 
-// 🔥 RUN EVERY TIME MODE CHANGES
-useEffect(() => {
-loadEntries(mode)
-}, [mode])
+  return (
+    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "20px" }}>
 
-// 🔥 LISTEN FOR MODE SWITCH EVENT
-useEffect(() => {
-const handleModeChange = () => {
-const newMode = localStorage.getItem("appMode") || "fuel"
-setMode(newMode)
-}
+      <h1 style={{ marginBottom: "10px" }}>
+        {mode === "fleet"
+          ? `${vehicleName || "Fleet Dashboard"}`
+          : "FuelWise Dashboard"}
+      </h1>
 
-```
-window.addEventListener("modeChanged", handleModeChange)
+      {mode === "fleet" && (
+        <button
+          style={{
+            marginBottom: 20,
+            padding: "8px 14px",
+            borderRadius: 10,
+            background: "#6c5ce7",
+            color: "white",
+            border: "none",
+            cursor: "pointer"
+          }}
+          onClick={() => alert("Multi-vehicle system coming next")}
+        >
+          + Add Vehicle
+        </button>
+      )}
 
-return () => {
-  window.removeEventListener("modeChanged", handleModeChange)
-}
-```
+      {loading && (
+        <p style={{ opacity: 0.6 }}>Loading data...</p>
+      )}
 
-}, [])
+      {!loading && entries.length === 0 && (
+        <p style={{ opacity: 0.6, marginBottom: "20px" }}>
+          No fuel entries yet - your dashboard will update as you add data.
+        </p>
+      )}
 
-return (
-<div style={{ maxWidth: "1000px", margin: "0 auto", padding: "20px" }}>
+      <StatCards entries={entries} />
+      <PredictionCard entries={entries} />
+      <NextFuelPrediction entries={entries} />
+      <ChartsPanel entries={entries} />
+      <EntriesTable entries={entries} />
 
-```
-  <h1 style={{ marginBottom: "10px" }}>
-    {mode === "fleet"
-      ? `${vehicleName || "Fleet Dashboard"}`
-      : "FuelWise Dashboard"}
-  </h1>
+      <FloatingAddButton />
 
-  {mode === "fleet" && (
-    <button
-      style={{
-        marginBottom: 20,
-        padding: "8px 14px",
-        borderRadius: 10,
-        background: "#6c5ce7",
-        color: "white",
-        border: "none",
-        cursor: "pointer"
-      }}
-      onClick={() => alert("Multi-vehicle system coming next 🔥")}
-    >
-      + Add Vehicle
-    </button>
-  )}
-
-  {loading && (
-    <p style={{ opacity: 0.6 }}>Loading data...</p>
-  )}
-
-  {!loading && entries.length === 0 && (
-    <p style={{ opacity: 0.6, marginBottom: "20px" }}>
-      No fuel entries yet - your dashboard will update as you add data 👇
-    </p>
-  )}
-
-  <StatCards entries={entries} />
-  <PredictionCard entries={entries} />
-  <NextFuelPrediction entries={entries} />
-  <ChartsPanel entries={entries} />
-  <EntriesTable entries={entries} />
-
-  <FloatingAddButton />
-
-</div>
-```
-
-)
+    </div>
+  )
 }
