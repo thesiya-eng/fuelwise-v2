@@ -39,7 +39,7 @@ const { data: listener } = supabase.auth.onAuthStateChange(
 )
 
 return () => {
-  listener.subscription.unsubscribe()
+  listener?.subscription?.unsubscribe?.()
 }
 
 
