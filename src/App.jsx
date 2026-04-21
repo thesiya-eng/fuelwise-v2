@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react"
-import { supabase } from "./lib/supabaseClient"
+import React from "react"
 import { Routes, Route } from "react-router-dom"
+import { useUser } from "./context/UserContext"
 
 import Shell from "./components/Shell.jsx"
 import Dashboard from "./pages/DashboardPage.jsx"
@@ -9,49 +9,9 @@ import Settings from "./pages/Settings.jsx"
 import AuthPage from "./pages/AuthPage.jsx"
 
 export default function App() {
-  const [session, setSession] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { user } = useUser()
 
-  useEffect(() => {
-    async function loadSession() {
-      try {
-        const { data, error } = await supabase.auth.getSession()
-
-        if (error) {
-          console.error(error)
-        }
-
-        setSession(data?.session || null)
-      } catch (err) {
-        console.error("Session error:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadSession()
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session)
-      }
-    )
-
-    return () => {
-      listener?.subscription?.unsubscribe?.()
-    }
-
-  }, [])
-
-  if (loading) {
-    return (
-      <div style={{ padding: "40px", color: "white" }}>
-        <h2>Loading FuelWise...</h2>
-      </div>
-    )
-  }
-
-  if (!session) {
+  if (!user) {
     return <AuthPage />
   }
 
