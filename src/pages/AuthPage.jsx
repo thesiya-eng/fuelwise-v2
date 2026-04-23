@@ -10,6 +10,14 @@ export default function AuthPage() {
   const [loading, setLoading] = React.useState(false)
   const [msg, setMsg] = React.useState(null)
 
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768)
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) nav("/", { replace: true })
@@ -75,6 +83,7 @@ export default function AuthPage() {
     <div
       style={{
         display: "flex",
+        flexDirection: isMobile ? "column" : "row",
         minHeight: "100vh",
       }}
     >
@@ -85,10 +94,10 @@ export default function AuthPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "40px",
+          padding: isMobile ? "20px" : "40px",
         }}
       >
-        <div className="card" style={{ width: "100%", maxWidth: "420px" }}>
+        <div className="card" style={{ width: "100%", maxWidth: "380px" }}>
           {/* HEADER */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ opacity: 0.5, fontSize: 13 }}>FuelWise</div>
@@ -229,44 +238,46 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* RIGHT */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "80px",
-        }}
-      >
-        <h1
+      {/* RIGHT (hidden on mobile) */}
+      {!isMobile && (
+        <div
           style={{
-            fontSize: "48px",
-            marginBottom: "20px",
-            background: "linear-gradient(135deg,#22c55e,#4ade80)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            padding: "80px",
           }}
         >
-          Smart Fuel Tracking
-        </h1>
+          <h1
+            style={{
+              fontSize: "48px",
+              marginBottom: "20px",
+              background: "linear-gradient(135deg,#22c55e,#4ade80)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Smart Fuel Tracking
+          </h1>
 
-        <p
-          style={{
-            fontSize: "18px",
-            opacity: 0.7,
-            maxWidth: "420px",
-            lineHeight: 1.6,
-          }}
-        >
-          Track your fuel spend, predict your next fill-up, and understand your
-          driving costs in real time.
-        </p>
+          <p
+            style={{
+              fontSize: "18px",
+              opacity: 0.7,
+              maxWidth: "420px",
+              lineHeight: 1.6,
+            }}
+          >
+            Track your fuel spend, predict your next fill-up, and understand your
+            driving costs in real time.
+          </p>
 
-        <div style={{ marginTop: 40, opacity: 0.5 }}>
-          Built for drivers who want control.
+          <div style={{ marginTop: 40, opacity: 0.5 }}>
+            Built for drivers who want control.
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
