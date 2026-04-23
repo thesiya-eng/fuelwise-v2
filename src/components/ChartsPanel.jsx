@@ -4,12 +4,13 @@ import MonthlyFuelCard from "./MonthlyFuelCard"
 
 export default function ChartsPanel({ entries }) {
 
-  // ✅ POWER UPGRADE: sort data chronologically (better charts)
   const sortedEntries = [...entries].reverse()
+
+  const isMobile = window.innerWidth < 768
 
   const containerStyle = {
     marginTop: "20px",
-    padding: "24px",
+    padding: isMobile ? "16px" : "24px",
     borderRadius: "16px",
     background: "rgba(255,255,255,0.04)",
     border: "1px solid rgba(255,255,255,0.08)",
@@ -17,8 +18,8 @@ export default function ChartsPanel({ entries }) {
 
   const gridStyle = {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
-    gap: "24px",
+    gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+    gap: "20px",
   }
 
   return (
@@ -26,8 +27,13 @@ export default function ChartsPanel({ entries }) {
       <h2 style={{ marginBottom: "20px" }}>Fuel Analytics</h2>
 
       <div style={gridStyle}>
-        <FuelEfficiencyChart entries={sortedEntries} />
-        <MonthlyFuelCard entries={sortedEntries} />
+        <div style={{ width: "100%", minWidth: 0 }}>
+          <FuelEfficiencyChart entries={sortedEntries} />
+        </div>
+
+        <div style={{ width: "100%", minWidth: 0 }}>
+          <MonthlyFuelCard entries={sortedEntries} />
+        </div>
       </div>
     </div>
   )
