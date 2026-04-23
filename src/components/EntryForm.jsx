@@ -1,134 +1,150 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { supabase } from "../lib/supabaseClient"
 
 export default function EntryForm({ onClose }) {
 
-const today = new Date().toISOString().slice(0, 10)
+  const today = new Date().toISOString().slice(0, 10)
 
-const [date, setDate] = useState(today)
-const [cost, setCost] = useState("")
-const [liters, setLiters] = useState("")
-const [odometer, setOdometer] = useState("")
-const [loading, setLoading] = useState(false)
+  const [date, setDate] = useState(today)
+  const [cost, setCost] = useState("")
+  const [liters, setLiters] = useState("")
+  const [odometer, setOdometer] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [open, setOpen] = useState(false)
 
-const saveEntry = async () => {
+  // 🔥 LISTEN FOR BUTTON EVENT
+  useEffect(() => {
+    const openHandler = () => setOpen(true)
 
-```
-if (!cost || !liters || !odometer) {
-  alert("Please fill all fields")
-  return
-}
+    window.addEventListener("openEntry", openHandler)
 
-setLoading(true)
+    return () => {
+      window.removeEventListener("openEntry", openHandler)
+    }
+  }, [])
 
-try {
+  const handleClose = () => {
+    setOpen(false)
+    if (onClose) onClose()
+  }
 
-  const {
-    data: { user },
-    error: userError
-  } = await supabase.auth.getUser()
+  const saveEntry = async () => {
 
-  if (userError || !user) {
-    alert("User not authenticated")
+    if (!cost || !liters || !odometer) {
+      alert("Please fill all fields")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+
+      const {
+        data: { user },
+        error: userError
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        alert("User not authenticated")
+        setLoading(false)
+        return
+      }
+
+      const mode = localStorage.getItem("appMode") || "fuel"
+      const vehicleId = localStorage.getItem("fleetVehicleId")
+
+      const insertData = {
+        user_id: user.id,
+        entry_date: date,
+        total_cost: parseFloat(cost),
+        liters: parseFloat(liters),
+        odometer_km: parseFloat(odometer),
+        mode: mode
+      }
+
+      if (mode === "fleet" && vehicleId) {
+        insertData.vehicle_id = vehicleId
+      }
+
+      const { error } = await supabase
+        .from("fuel_entries")
+        .insert([insertData])
+
+      if (error) {
+        alert(error.message)
+        setLoading(false)
+        return
+      }
+
+      window.dispatchEvent(new Event("entryAdded"))
+      handleClose()
+
+    } catch (err) {
+      console.error(err)
+      alert("Something went wrong")
+    }
+
     setLoading(false)
-    return
   }
 
-  // 🔥 GET MODE + VEHICLE
-  const mode = localStorage.getItem("appMode") || "fuel"
-  const vehicleId = localStorage.getItem("fleetVehicleId")
+  // 🔥 DO NOT RENDER IF CLOSED
+  if (!open) return null
 
-  const insertData = {
-    user_id: user.id,
-    entry_date: date,
-    total_cost: parseFloat(cost),
-    liters: parseFloat(liters),
-    odometer_km: parseFloat(odometer),
-    mode: mode // ✅ THIS FIXES DATA MIXING
-  }
+  return (
+    <div className="modal-backdrop">
 
-  // 🔥 IF FLEET MODE → ADD VEHICLE
-  if (mode === "fleet" && vehicleId) {
-    insertData.vehicle_id = vehicleId
-  }
+      <div className="modal-card">
 
-  const { data, error } = await supabase
-    .from("fuel_entries")
-    .insert([insertData])
-    .select()
+        <h3>Add Fuel Entry</h3>
 
-  if (error) {
-    alert(error.message)
-    setLoading(false)
-    return
-  }
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={{ width: "100%", marginTop: 10, padding: 10 }}
+        />
 
-  window.dispatchEvent(new Event("entryAdded"))
-  onClose()
+        <input
+          type="number"
+          placeholder="Total Cost (R)"
+          value={cost}
+          onChange={(e) => setCost(e.target.value)}
+          style={{ width: "100%", marginTop: 10, padding: 10 }}
+        />
 
-} catch (err) {
-  console.error(err)
-  alert("Something went wrong")
-}
+        <input
+          type="number"
+          placeholder="Liters"
+          value={liters}
+          onChange={(e) => setLiters(e.target.value)}
+          style={{ width: "100%", marginTop: 10, padding: 10 }}
+        />
 
-setLoading(false)
-```
+        <input
+          type="number"
+          placeholder="Odometer (km)"
+          value={odometer}
+          onChange={(e) => setOdometer(e.target.value)}
+          style={{ width: "100%", marginTop: 10, padding: 10 }}
+        />
 
-}
+        <button
+          style={{ marginTop: 14, width: "100%", padding: 12 }}
+          onClick={saveEntry}
+          disabled={loading}
+        >
+          {loading ? "Saving..." : "Save Entry"}
+        </button>
 
-return ( <div className="modal-card">
+        <button
+          style={{ marginTop: 10, width: "100%", padding: 12 }}
+          onClick={handleClose}
+        >
+          Cancel
+        </button>
 
-```
-  <h3>Add Fuel Entry</h3>
+      </div>
 
-  <input
-    type="date"
-    value={date}
-    onChange={(e) => setDate(e.target.value)}
-    style={{ width: "100%", marginTop: 10, padding: 10 }}
-  />
-
-  <input
-    type="number"
-    placeholder="Total Cost (R)"
-    value={cost}
-    onChange={(e) => setCost(e.target.value)}
-    style={{ width: "100%", marginTop: 10, padding: 10 }}
-  />
-
-  <input
-    type="number"
-    placeholder="Liters"
-    value={liters}
-    onChange={(e) => setLiters(e.target.value)}
-    style={{ width: "100%", marginTop: 10, padding: 10 }}
-  />
-
-  <input
-    type="number"
-    placeholder="Odometer (km)"
-    value={odometer}
-    onChange={(e) => setOdometer(e.target.value)}
-    style={{ width: "100%", marginTop: 10, padding: 10 }}
-  />
-
-  <button
-    style={{ marginTop: 14, width: "100%", padding: 12 }}
-    onClick={saveEntry}
-    disabled={loading}
-  >
-    {loading ? "Saving..." : "Save Entry"}
-  </button>
-
-  <button
-    style={{ marginTop: 10, width: "100%", padding: 12 }}
-    onClick={onClose}
-  >
-    Cancel
-  </button>
-
-</div>
-```
-
-)
+    </div>
+  )
 }
