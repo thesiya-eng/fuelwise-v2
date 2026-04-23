@@ -4,21 +4,32 @@ export default function FloatingAddButton() {
 
   const [open, setOpen] = useState(false)
 
+  const isMobile = window.innerWidth < 768
+
   const trigger = (eventName) => {
     window.dispatchEvent(new Event(eventName))
     setOpen(false)
   }
 
+  const handleMainClick = () => {
+    if (isMobile) {
+      // 🔥 directly open entry on mobile
+      trigger("openEntry")
+    } else {
+      setOpen(!open)
+    }
+  }
+
   return (
     <div style={{
       position: "fixed",
-      bottom: 30,
-      right: 30,
+      bottom: 20,
+      right: 20,
       zIndex: 1000
     }}>
 
-      {/* MENU */}
-      {open && (
+      {/* MENU (desktop only) */}
+      {!isMobile && open && (
         <div style={{
           position: "absolute",
           bottom: 60,
@@ -28,24 +39,15 @@ export default function FloatingAddButton() {
           gap: 10
         }}>
 
-          <div
-            onClick={() => trigger("openEntry")}
-            style={menuItem}
-          >
+          <div onClick={() => trigger("openEntry")} style={menuItem}>
             ➕ Add Fuel Entry
           </div>
 
-          <div
-            onClick={() => trigger("openOdometer")}
-            style={menuItem}
-          >
+          <div onClick={() => trigger("openOdometer")} style={menuItem}>
             📏 Add Odometer
           </div>
 
-          <div
-            onClick={() => trigger("openQuickLog")}
-            style={menuItem}
-          >
+          <div onClick={() => trigger("openQuickLog")} style={menuItem}>
             ⛽ Quick Log
           </div>
 
@@ -53,10 +55,7 @@ export default function FloatingAddButton() {
       )}
 
       {/* MAIN BUTTON */}
-      <button
-        onClick={() => setOpen(!open)}
-        style={fabStyle}
-      >
+      <button onClick={handleMainClick} style={fabStyle}>
         + Add Entry
       </button>
 
