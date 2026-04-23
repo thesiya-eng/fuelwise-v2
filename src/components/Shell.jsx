@@ -1,7 +1,6 @@
 import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-// 👇 import your logos
 import fuelLogo from "../assets/logo.png"
 import fleetLogo from "../assets/fleetwise.png"
 
@@ -27,13 +26,15 @@ export default function Shell({ children }) {
 
   const currentLogo = mode === "fleet" ? fleetLogo : fuelLogo
 
+  const isMobile = window.innerWidth < 768
+
   return (
     <div>
 
       <div style={{
         display: "flex",
         justifyContent: "space-between",
-        padding: "20px",
+        padding: isMobile ? "16px" : "20px",
         alignItems: "center"
       }}>
 
@@ -44,9 +45,12 @@ export default function Shell({ children }) {
             src={currentLogo}
             alt="logo"
             style={{
-              height: "40px",
-              width: "auto",
-              objectFit: "contain"
+              height: "42px",
+              width: "42px",
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.4)"
             }}
           />
 
@@ -56,19 +60,19 @@ export default function Shell({ children }) {
 
         </div>
 
+        {/* 🔥 BUTTONS */}
         <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={switchMode}>
-            Switch Mode
+          <button className="glass-btn" onClick={switchMode}>
+            🔁 Switch Mode
           </button>
 
-          <button onClick={logout}>
-            Logout
+          <button className="glass-btn glass-btn-purple" onClick={logout}>
+            🚪 Logout
           </button>
         </div>
 
       </div>
 
-      {/* 🔥 THIS IS THE FIX */}
       <div key={mode}>
         {children}
       </div>
