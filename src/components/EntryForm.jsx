@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { supabase } from "../lib/supabaseClient"
 
-export default function EntryForm({ open, onClose }) {
+export default function EntryForm({ open, onClose, onSaved }) {
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -11,7 +11,6 @@ export default function EntryForm({ open, onClose }) {
   const [odometer, setOdometer] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // 🔥 controlled by parent now
   if (!open) return null
 
   const handleClose = () => {
@@ -66,8 +65,8 @@ export default function EntryForm({ open, onClose }) {
         return
       }
 
-      // optional: still notify dashboard if you use it
-      window.dispatchEvent(new Event("entryAdded"))
+      // 🔥 THIS replaces the old event system
+      if (onSaved) onSaved()
 
       handleClose()
 
@@ -81,7 +80,6 @@ export default function EntryForm({ open, onClose }) {
 
   return (
     <div className="modal-backdrop">
-
       <div className="modal-card">
 
         <h3>Add Fuel Entry</h3>
@@ -133,7 +131,6 @@ export default function EntryForm({ open, onClose }) {
         </button>
 
       </div>
-
     </div>
   )
 }

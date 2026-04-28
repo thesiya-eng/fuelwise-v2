@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [showEntry, setShowEntry] = useState(false)
+  const [showToast, setShowToast] = useState(false) // ✅ NEW
 
   const [mode, setMode] = useState(
     localStorage.getItem("appMode") || "fuel"
@@ -125,8 +126,35 @@ export default function Dashboard() {
       <EntryForm
         open={showEntry}
         onClose={() => setShowEntry(false)}
+        onSaved={() => {
+          loadEntries(mode)
+          setShowToast(true)
+
+          setTimeout(() => setShowToast(false), 2500)
+        }}
       />
+
+      {/* ✅ TOAST */}
+      {showToast && (
+        <div style={toastStyle}>
+          ✅ Entry saved successfully
+        </div>
+      )}
 
     </div>
   )
+}
+
+const toastStyle = {
+  position: "fixed",
+  bottom: 30,
+  left: "50%",
+  transform: "translateX(-50%)",
+  background: "rgba(0,0,0,0.85)",
+  color: "white",
+  padding: "12px 20px",
+  borderRadius: 12,
+  fontSize: 14,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+  zIndex: 2000
 }
