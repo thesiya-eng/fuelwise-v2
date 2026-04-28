@@ -1,20 +1,14 @@
 import React, { useState } from "react"
 
-export default function FloatingAddButton() {
+export default function FloatingAddButton({ onAdd }) {
 
   const [open, setOpen] = useState(false)
 
   const isMobile = window.innerWidth < 768
 
-  const trigger = (eventName) => {
-    window.dispatchEvent(new Event(eventName))
-    setOpen(false)
-  }
-
   const handleMainClick = () => {
     if (isMobile) {
-      // 🔥 directly open entry on mobile
-      trigger("openEntry")
+      onAdd()
     } else {
       setOpen(!open)
     }
@@ -28,7 +22,6 @@ export default function FloatingAddButton() {
       zIndex: 1000
     }}>
 
-      {/* MENU (desktop only) */}
       {!isMobile && open && (
         <div style={{
           position: "absolute",
@@ -38,23 +31,12 @@ export default function FloatingAddButton() {
           flexDirection: "column",
           gap: 10
         }}>
-
-          <div onClick={() => trigger("openEntry")} style={menuItem}>
+          <div onClick={onAdd} style={menuItem}>
             ➕ Add Fuel Entry
           </div>
-
-          <div onClick={() => trigger("openOdometer")} style={menuItem}>
-            📏 Add Odometer
-          </div>
-
-          <div onClick={() => trigger("openQuickLog")} style={menuItem}>
-            ⛽ Quick Log
-          </div>
-
         </div>
       )}
 
-      {/* MAIN BUTTON */}
       <button onClick={handleMainClick} style={fabStyle}>
         + Add Entry
       </button>

@@ -7,12 +7,13 @@ import NextFuelPrediction from "../components/NextFuelPrediction"
 import ChartsPanel from "../components/ChartsPanel"
 import EntriesTable from "../components/EntriesTable"
 import FloatingAddButton from "../components/FloatingAddButton"
-import EntryForm from "../components/EntryForm" // ✅ ADD THIS
+import EntryForm from "../components/EntryForm"
 
 export default function Dashboard() {
 
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showEntry, setShowEntry] = useState(false)
 
   const [mode, setMode] = useState(
     localStorage.getItem("appMode") || "fuel"
@@ -34,7 +35,6 @@ export default function Dashboard() {
       .select("*")
       .order("entry_date", { ascending: false })
 
-    // filter by mode
     query = query.eq("mode", currentMode)
 
     if (currentMode === "fuel") {
@@ -106,9 +106,7 @@ export default function Dashboard() {
         </button>
       )}
 
-      {loading && (
-        <p style={{ opacity: 0.6 }}>Loading data...</p>
-      )}
+      {loading && <p style={{ opacity: 0.6 }}>Loading data...</p>}
 
       {!loading && entries.length === 0 && (
         <p style={{ opacity: 0.6, marginBottom: "20px" }}>
@@ -122,10 +120,12 @@ export default function Dashboard() {
       <ChartsPanel entries={entries} />
       <EntriesTable entries={entries} />
 
-      <FloatingAddButton />
+      <FloatingAddButton onAdd={() => setShowEntry(true)} />
 
-      {/* ✅ THIS WAS MISSING — THE ENTIRE PROBLEM */}
-      <EntryForm />
+      <EntryForm
+        open={showEntry}
+        onClose={() => setShowEntry(false)}
+      />
 
     </div>
   )

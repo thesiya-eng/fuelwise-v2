@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { supabase } from "../lib/supabaseClient"
 
-export default function EntryForm({ onClose }) {
+export default function EntryForm({ open, onClose }) {
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -10,21 +10,11 @@ export default function EntryForm({ onClose }) {
   const [liters, setLiters] = useState("")
   const [odometer, setOdometer] = useState("")
   const [loading, setLoading] = useState(false)
-  const [open, setOpen] = useState(false)
 
-  // 🔥 LISTEN FOR BUTTON EVENT
-  useEffect(() => {
-    const openHandler = () => setOpen(true)
-
-    window.addEventListener("openEntry", openHandler)
-
-    return () => {
-      window.removeEventListener("openEntry", openHandler)
-    }
-  }, [])
+  // 🔥 controlled by parent now
+  if (!open) return null
 
   const handleClose = () => {
-    setOpen(false)
     if (onClose) onClose()
   }
 
@@ -76,7 +66,9 @@ export default function EntryForm({ onClose }) {
         return
       }
 
+      // optional: still notify dashboard if you use it
       window.dispatchEvent(new Event("entryAdded"))
+
       handleClose()
 
     } catch (err) {
@@ -86,9 +78,6 @@ export default function EntryForm({ onClose }) {
 
     setLoading(false)
   }
-
-  // 🔥 DO NOT RENDER IF CLOSED
-  if (!open) return null
 
   return (
     <div className="modal-backdrop">
