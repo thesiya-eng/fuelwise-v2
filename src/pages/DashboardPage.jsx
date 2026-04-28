@@ -7,6 +7,7 @@ import NextFuelPrediction from "../components/NextFuelPrediction"
 import ChartsPanel from "../components/ChartsPanel"
 import EntriesTable from "../components/EntriesTable"
 import FloatingAddButton from "../components/FloatingAddButton"
+import EntryForm from "../components/EntryForm" // ✅ ADD THIS
 
 export default function Dashboard() {
 
@@ -62,12 +63,10 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  // reload when mode changes
   useEffect(() => {
     loadEntries(mode)
   }, [mode])
 
-  // listen for mode switch
   useEffect(() => {
     const handleModeChange = () => {
       const newMode = localStorage.getItem("appMode") || "fuel"
@@ -124,6 +123,9 @@ export default function Dashboard() {
       <EntriesTable entries={entries} />
 
       <FloatingAddButton />
+
+      {/* ✅ THIS WAS MISSING — THE ENTIRE PROBLEM */}
+      <EntryForm />
 
     </div>
   )
